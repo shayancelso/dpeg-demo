@@ -9,6 +9,7 @@ import ScenarioModeling from './pages/ScenarioModeling';
 import DocumentCenter from './pages/DocumentCenter';
 import Investors from './pages/Investors';
 import ProjectsOps from './pages/ProjectsOps';
+import Settings from './pages/Settings';
 import { UserRole } from './types';
 
 const App: React.FC = () => {
@@ -67,7 +68,7 @@ const App: React.FC = () => {
                 <Route path="/documents" element={<DocumentCenter />} />
                 <Route path="/investors" element={<Investors />} />
                 <Route path="/projects" element={<ProjectsOps />} />
-                <Route path="/settings" element={<div className="p-10 text-slate-400 text-center">RBAC & System Configuration</div>} />
+                <Route path="/settings" element={<Settings />} />
             </Routes>
         </Router>
       </main>

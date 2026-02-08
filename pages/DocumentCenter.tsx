@@ -17,10 +17,13 @@ const DocumentCenter: React.FC = () => {
     const [selectedInvestor, setSelectedInvestor] = useState<string>('');
     const [generatedContent, setGeneratedContent] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
     const handleGenerate = async () => {
         if (!selectedTemplate || !selectedInvestor) return;
-        
+
         setIsGenerating(true);
         // Simulate pulling real data from the DB for the context
         const contextData = {
@@ -29,16 +32,37 @@ const DocumentCenter: React.FC = () => {
             fund: "Multifamily Fund IV",
             bankDetails: "Chase Bank, Acct ****9988"
         };
-        
+
         const content = await generateDocumentContent(
             selectedTemplate.name,
             selectedInvestor,
             contextData
         );
-        
+
         setGeneratedContent(content);
         setIsGenerating(false);
     };
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleDownloadPDF = () => {
+        setToastMessage('Downloading...');
+        setShowToast(true);
+
+        setTimeout(() => {
+            setToastMessage('Download complete');
+
+            setTimeout(() => {
+                setShowToast(false);
+            }, 2000);
+        }, 1500);
+    };
+
+    const filteredTemplates = templates.filter(template =>
+        template.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="h-full flex flex-col">
@@ -55,16 +79,18 @@ const DocumentCenter: React.FC = () => {
                     <div className="p-4 border-b border-slate-100 bg-slate-50">
                         <div className="relative">
                             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                            <input 
-                                type="text" 
-                                placeholder="Search templates..." 
+                            <input
+                                type="text"
+                                placeholder="Search templates..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
                             />
                         </div>
                     </div>
                     <div className="overflow-y-auto flex-1 p-2">
-                        {templates.map(t => (
-                            <div 
+                        {filteredTemplates.map(t => (
+                            <div
                                 key={t.id}
                                 onClick={() => setSelectedTemplate(t)}
                                 className={`p-4 rounded-lg cursor-pointer mb-2 transition-colors ${selectedTemplate?.id === t.id ? 'bg-blue-50 border border-blue-200' : 'hover:bg-slate-50 border border-transparent'}`}
@@ -79,6 +105,11 @@ const DocumentCenter: React.FC = () => {
                                 </div>
                             </div>
                         ))}
+                        {filteredTemplates.length === 0 && (
+                            <div className="p-4 text-center text-slate-400 text-sm">
+                                No templates found
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -87,7 +118,7 @@ const DocumentCenter: React.FC = () => {
                     {/* Action Bar */}
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                            <select 
+                            <select
                                 className="border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none"
                                 value={selectedInvestor}
                                 onChange={(e) => setSelectedInvestor(e.target.value)}
@@ -95,8 +126,8 @@ const DocumentCenter: React.FC = () => {
                                 <option value="">Select Investor...</option>
                                 {mockInvestors.map(inv => <option key={inv} value={inv}>{inv}</option>)}
                             </select>
-                            
-                            <button 
+
+                            <button
                                 onClick={handleGenerate}
                                 disabled={!selectedTemplate || !selectedInvestor || isGenerating}
                                 className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors
@@ -109,13 +140,21 @@ const DocumentCenter: React.FC = () => {
                                 )}
                             </button>
                         </div>
-                        
+
                         {generatedContent && (
                             <div className="flex space-x-2">
-                                <button className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg" title="Print">
+                                <button
+                                    onClick={handlePrint}
+                                    className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+                                    title="Print"
+                                >
                                     <Printer className="w-5 h-5" />
                                 </button>
-                                <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Download PDF">
+                                <button
+                                    onClick={handleDownloadPDF}
+                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                    title="Download PDF"
+                                >
                                     <Download className="w-5 h-5" />
                                 </button>
                             </div>
@@ -148,6 +187,14 @@ const DocumentCenter: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Toast Notification */}
+            {showToast && (
+                <div className="fixed bottom-8 right-8 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-xl flex items-center space-x-2 animate-fade-in">
+                    {toastMessage === 'Download complete' && <CheckCircle className="w-5 h-5 text-green-400" />}
+                    <span className="font-medium">{toastMessage}</span>
+                </div>
+            )}
         </div>
     );
 };

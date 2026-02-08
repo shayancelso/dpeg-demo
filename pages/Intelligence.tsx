@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { predictNextBestAction } from '../services/geminiService';
-import { BrainCircuit, Send, AlertTriangle, TrendingUp, UserCheck } from 'lucide-react';
+import { BrainCircuit, Send, AlertTriangle, TrendingUp, UserCheck, CheckCircle, X } from 'lucide-react';
 import { Investor } from '../types';
 
 const mockInvestors: Investor[] = [
@@ -9,16 +9,26 @@ const mockInvestors: Investor[] = [
     { id: '3', name: 'Estate Holdings Group', totalInvested: 12000000, activeDeals: 12, riskScore: 12, lastInteraction: '2024-05-20', email: 'invest@ehg.com' },
 ];
 
+interface WorkflowStep {
+    text: string;
+    completed: boolean;
+}
+
 const Intelligence: React.FC = () => {
     const [selectedInvestor, setSelectedInvestor] = useState<Investor | null>(null);
     const [recommendations, setRecommendations] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [showWorkflow, setShowWorkflow] = useState(false);
+    const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
+    const [workflowComplete, setWorkflowComplete] = useState(false);
 
     const handleAnalyze = async (investor: Investor) => {
         setSelectedInvestor(investor);
         setLoading(true);
         setRecommendations([]);
-        
+        setShowWorkflow(false);
+        setWorkflowComplete(false);
+
         // Simulate analyzing detailed profile data
         const profile = JSON.stringify({
             ...investor,
@@ -32,6 +42,35 @@ const Intelligence: React.FC = () => {
         const actions = await predictNextBestAction(profile);
         setRecommendations(actions);
         setLoading(false);
+    };
+
+    const handleExecuteWorkflow = () => {
+        setShowWorkflow(true);
+        setWorkflowComplete(false);
+
+        const steps: WorkflowStep[] = [
+            { text: 'Generating personalized email...', completed: false },
+            { text: 'Scheduling follow-up call...', completed: false },
+            { text: 'Creating CRM task...', completed: false }
+        ];
+
+        setWorkflowSteps(steps);
+
+        // Animate step completion
+        steps.forEach((step, index) => {
+            setTimeout(() => {
+                setWorkflowSteps(prev =>
+                    prev.map((s, i) => i === index ? { ...s, completed: true } : s)
+                );
+
+                // After last step, show completion
+                if (index === steps.length - 1) {
+                    setTimeout(() => {
+                        setWorkflowComplete(true);
+                    }, 500);
+                }
+            }, (index + 1) * 1500);
+        });
     };
 
     return (
@@ -68,8 +107,8 @@ const Intelligence: React.FC = () => {
                                         <td className="py-4 px-4">
                                             <div className="flex items-center">
                                                 <div className="w-24 h-2 bg-slate-200 rounded-full mr-2">
-                                                    <div 
-                                                        className={`h-2 rounded-full ${inv.riskScore > 70 ? 'bg-red-500' : inv.riskScore > 40 ? 'bg-yellow-500' : 'bg-green-500'}`} 
+                                                    <div
+                                                        className={`h-2 rounded-full ${inv.riskScore > 70 ? 'bg-red-500' : inv.riskScore > 40 ? 'bg-yellow-500' : 'bg-green-500'}`}
                                                         style={{ width: `${inv.riskScore}%` }}
                                                     ></div>
                                                 </div>
@@ -78,7 +117,7 @@ const Intelligence: React.FC = () => {
                                         </td>
                                         <td className="py-4 px-4 text-slate-500">{inv.lastInteraction}</td>
                                         <td className="py-4 px-4">
-                                            <button 
+                                            <button
                                                 onClick={() => handleAnalyze(inv)}
                                                 className="text-sm text-blue-600 font-medium hover:text-blue-800"
                                             >
@@ -122,7 +161,7 @@ const Intelligence: React.FC = () => {
             {/* Right Col: Next Best Action */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col">
                 <h3 className="text-lg font-bold text-slate-900 mb-4 border-b pb-2">AI Recommendation Engine</h3>
-                
+
                 {selectedInvestor ? (
                     <div className="flex-1 flex flex-col">
                         <div className="mb-6">
@@ -149,7 +188,10 @@ const Intelligence: React.FC = () => {
                                     </div>
                                 ))}
                                 <div className="mt-6 pt-4 border-t">
-                                    <button className="w-full bg-slate-900 text-white py-2 rounded-lg hover:bg-slate-800 flex items-center justify-center">
+                                    <button
+                                        onClick={handleExecuteWorkflow}
+                                        className="w-full bg-slate-900 text-white py-2 rounded-lg hover:bg-slate-800 flex items-center justify-center"
+                                    >
                                         <Send className="w-4 h-4 mr-2" /> Execute Workflow
                                     </button>
                                 </div>
@@ -162,6 +204,48 @@ const Intelligence: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Workflow Execution Panel */}
+            {showWorkflow && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 relative">
+                        <button
+                            onClick={() => setShowWorkflow(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <h3 className="text-xl font-bold text-slate-900 mb-6">Workflow Execution</h3>
+
+                        <div className="space-y-4">
+                            {workflowSteps.map((step, index) => (
+                                <div key={index} className="flex items-center">
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 ${
+                                        step.completed
+                                            ? 'bg-green-500'
+                                            : 'bg-slate-200 animate-pulse'
+                                    }`}>
+                                        {step.completed && <CheckCircle className="w-4 h-4 text-white" />}
+                                    </div>
+                                    <p className={`text-sm ${step.completed ? 'text-slate-900 font-medium' : 'text-slate-500'}`}>
+                                        {step.text}
+                                    </p>
+                                </div>
+                            ))}
+
+                            {workflowComplete && (
+                                <div className="mt-6 pt-6 border-t border-slate-200">
+                                    <div className="flex items-center justify-center text-green-600">
+                                        <CheckCircle className="w-6 h-6 mr-2" />
+                                        <p className="font-semibold">Workflow executed successfully</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
