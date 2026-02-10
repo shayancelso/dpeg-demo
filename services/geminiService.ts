@@ -4,7 +4,8 @@ import { GoogleGenAI } from "@google/genai";
 // Note: We are using a factory function or recreating it in calls to ensure 
 // we catch the latest key if it changes (though usually env is static).
 const getAIClient = () => {
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const key = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY;
+    return new GoogleGenAI({ apiKey: key });
 }
 
 export const generateExecutiveSummary = async (metrics: string): Promise<string> => {
