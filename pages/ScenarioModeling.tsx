@@ -7,6 +7,14 @@ import { Sliders, RefreshCw, Save, TrendingUp, AlertCircle, DollarSign, BrainCir
 import { ScenarioInputs } from '../types';
 import { analyzeFinancialScenario } from '../services/geminiService';
 
+const formatAiText = (text: string): string => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^[-•]\s/gm, '&bull; ')
+    .replace(/\n/g, '<br/>');
+};
+
 interface SavedScenario {
     id: string;
     name: string;
@@ -233,9 +241,8 @@ const ScenarioModeling: React.FC = () => {
                     <h4 className="text-xs font-bold text-yellow-800 uppercase mb-2 flex items-center">
                         <AlertCircle className="w-3 h-3 mr-1" /> AI Risk Assessment
                     </h4>
-                    <p className="text-xs text-yellow-900 leading-relaxed">
-                        {aiAnalysis}
-                    </p>
+                    <p className="text-xs text-yellow-900 leading-relaxed"
+                       dangerouslySetInnerHTML={{ __html: formatAiText(aiAnalysis) }} />
                 </div>
             )}
         </div>

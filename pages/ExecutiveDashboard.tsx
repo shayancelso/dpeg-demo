@@ -30,6 +30,14 @@ const integrations: IntegrationStatus[] = [
   { service: 'CoStar', connected: true, lastSync: '1 day ago', entitiesSynced: 50 },
 ];
 
+const formatAiText = (text: string): string => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^[-•]\s/gm, '&bull; ')
+    .replace(/\n/g, '<br/>');
+};
+
 const ExecutiveDashboard: React.FC = () => {
   const [aiSummary, setAiSummary] = useState<string>('Generating real-time insights...');
   const [isLoading, setIsLoading] = useState(true);
@@ -124,7 +132,7 @@ const ExecutiveDashboard: React.FC = () => {
                            </div>
                         </div>
                     ) : (
-                        <p className="whitespace-pre-line">{aiSummary}</p>
+                        <p dangerouslySetInnerHTML={{ __html: formatAiText(aiSummary) }} />
                     )}
                 </div>
             </div>
